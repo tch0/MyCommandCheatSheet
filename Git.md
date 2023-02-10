@@ -1,5 +1,8 @@
 # Git命令速查
 
+- [git命令速查](https://training.github.com/downloads/zh_CN/github-git-cheat-sheet/)
+- [git可视化命令速查](https://ndpsoftware.com/git-cheatsheet.html#loc=stash;)
+
 ## 子模块
 
 - [文档](https://git-scm.com/book/zh/v2/Git-%E5%B7%A5%E5%85%B7-%E5%AD%90%E6%A8%A1%E5%9D%97)
