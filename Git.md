@@ -19,3 +19,61 @@
 - 用到了别人的第三方库，将其整合到自己的项目中，方便追踪最新的更新或者固定到特定版本，将第三方库作为子模块签出到项目中。
 - 为了防止远程仓库删除，可以先fork之后再添加子模块。
 - 因为github国内访问很慢，可以先将仓库导入到gitee之后，从gitee添加子模块，添加完成后再将地址修改为github。
+
+## 配置代理
+
+- 参考：https://zhuanlan.zhihu.com/p/481574024
+
+- https代理：
+```shell
+#使用http代理 
+git config --global http.proxy http://127.0.0.1:58591
+git config --global https.proxy https://127.0.0.1:58591
+#使用socks5代理
+git config --global http.proxy socks5://127.0.0.1:51837
+git config --global https.proxy socks5://127.0.0.1:51837
+```
+- 只对`github.com`进行代理，避免对其他网站比如`gitee.com`进行代理：
+```shell
+#使用socks5代理（推荐）
+git config --global http.http://github.com.proxy socks5://127.0.0.1:51837
+#使用http代理（不推荐）
+git config --global http.https://github.com.proxy http://127.0.0.1:58591
+```
+- 直接修改文件`~/.gitconfig`：
+```
+[http "http://github.com"]
+	proxy = socks5://127.0.0.1:33211
+[https "https://github.com"]
+	proxy = socks5://127.0.0.1:33211
+```
+- 取消代理，删除文件对应内容或者
+```shell
+git config --global --unset http.proxy
+git config --global --unset https.proxy
+```
+- ssh代理：修改`~/.ssh/config`，添加内容：
+```
+#Windows用户，注意替换你的端口号和connect.exe的路径
+ProxyCommand "C:\APP\Git\mingw64\bin\connect" -S 127.0.0.1:51837 -a none %h %p
+
+#MacOS用户用下方这条命令，注意替换你的端口号
+#ProxyCommand nc -v -x 127.0.0.1:51837 %h %p
+
+Host github.com
+  User git
+  Port 22
+  Hostname github.com
+  # 注意修改路径为你的路径
+  IdentityFile "C:\Users\Your_User_Name\.ssh\id_rsa"
+  TCPKeepAlive yes
+
+Host ssh.github.com
+  User git
+  Port 443
+  Hostname ssh.github.com
+  # 注意修改路径为你的路径
+  IdentityFile "C:\Users\Your_User_Name\.ssh\id_rsa"
+  TCPKeepAlive yes
+```
+- 其中https和socks5代理端口需要去代理软件中查看。
