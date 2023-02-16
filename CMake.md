@@ -72,3 +72,27 @@ cmake-gui -S path/to/source -B path/to/build
 ```sh
 make edit_cache
 ```
+
+## 安装
+
+- 安装
+```sh
+cd ./build
+cmake ..
+cmake --build .
+cmake --install .
+```
+- 不给`--prefix`参数时会安装到默认目录，Windows中会安装到`C:/Program Files (x86)/${PROJECT}`。Unix中则是对应的目录，比如`usr/local/include /usr/local/bin`之类。
+- 安装到指定的目录：
+```sh
+cmake --install . --prefix "install-dir"
+```
+- 或者在配置cmake时通过指定`CMAKE_INSTALL_PREFIX`（也可以在`CMakeLists.txt`中写死）：
+```sh
+cmake .. -DCMAKE_INSTALL_PREFIX=your/install/path
+```
+- 对于多配置的工具链（比如Visual Studio），可以使用`--config`选择安装特定配置：
+```sh
+cmake --install . --config Release
+```
+- 单配置的工具链则是在cmake配置时指定构建类型，从而安装该构建类型。
