@@ -1,3 +1,15 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [CMake命令速查](#cmake%E5%91%BD%E4%BB%A4%E9%80%9F%E6%9F%A5)
+  - [配置与构建](#%E9%85%8D%E7%BD%AE%E4%B8%8E%E6%9E%84%E5%BB%BA)
+  - [构建类型选择](#%E6%9E%84%E5%BB%BA%E7%B1%BB%E5%9E%8B%E9%80%89%E6%8B%A9)
+  - [安装](#%E5%AE%89%E8%A3%85)
+  - [打包](#%E6%89%93%E5%8C%85)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # CMake命令速查
 
 
@@ -96,3 +108,20 @@ cmake .. -DCMAKE_INSTALL_PREFIX=your/install/path
 cmake --install . --config Release
 ```
 - 单配置的工具链则是在cmake配置时指定构建类型，从而安装该构建类型。
+
+## 打包
+
+- 打包工具（Windows可能和chocolatey中的cpack.exe冲突，如果都在path中的话）：
+```sh
+cpack
+```
+- 在但配置中项目中也可以执行`make package`，在多配置项目比如VS项目中构建项目`Package`就可以完成打包。
+- Windows中生成安装包依赖于NSIS（创建Windows安装包的开源工具），需要配置到path中，可以在[nsis.sourceforge.net](https://nsis.sourceforge.io/Main_Page)下载。
+- 指定生成器以及配置：
+```sh
+cpack -G ZIP -C Debug
+```
+- 创建完整源码树的归档包：
+```sh
+cpack --config CPackSourceConfig.cmake
+```
