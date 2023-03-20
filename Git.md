@@ -46,13 +46,13 @@ git config --global https.proxy socks5://127.0.0.1:51837
 - 只对`github.com`进行代理，避免对其他网站比如`gitee.com`进行代理：
 ```shell
 #使用socks5代理（推荐）
-git config --global http.http://github.com.proxy socks5://127.0.0.1:51837
+git config --global http.https://github.com.proxy socks5://127.0.0.1:51837
 #使用http代理（不推荐）
 git config --global http.https://github.com.proxy http://127.0.0.1:58591
 ```
 - 直接修改文件`~/.gitconfig`：
 ```
-[http "http://github.com"]
+[http "https://github.com"]
 	proxy = socks5://127.0.0.1:33211
 [https "https://github.com"]
 	proxy = socks5://127.0.0.1:33211
