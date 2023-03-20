@@ -23,6 +23,12 @@
 - `.gitmodules`需要跟踪，不要自行修改其内容。
 - 默认签出主仓库后子模块的目录中是空的，需要更新子模块。克隆仓库时添加`--recurse-submodules`选项则会同时克隆子模块。
 - 初始化与更新子模块：`git submodule init`和`git submodule update`，合起来`git submodule update --init`
+- 删除子模块：
+  - 清除缓存：`git rm --cached submodule-name`。
+  - 移除子模块源码目录 `rm -rf path/to/submodule`。
+  - 修改`.gitmodules`对应条目。
+  - 删除`.git/config`中对应条目。
+  - 删除`.git`目录中的对应子模块目录 `rm .git/modules/submodule-name`。
 - 对子模块进行修改提交会自动更新主仓库中的子模块版本。
 
 子模块的典型场景：
