@@ -6,6 +6,8 @@
   - [静态/动态库配置](#%E9%9D%99%E6%80%81%E5%8A%A8%E6%80%81%E5%BA%93%E9%85%8D%E7%BD%AE)
   - [编译选项定制](#%E7%BC%96%E8%AF%91%E9%80%89%E9%A1%B9%E5%AE%9A%E5%88%B6)
   - [文件拷贝](#%E6%96%87%E4%BB%B6%E6%8B%B7%E8%B4%9D)
+  - [检查编译器是否支持某特性](#%E6%A3%80%E6%9F%A5%E7%BC%96%E8%AF%91%E5%99%A8%E6%98%AF%E5%90%A6%E6%94%AF%E6%8C%81%E6%9F%90%E7%89%B9%E6%80%A7)
+  - [通过编译代码片段检查是否支持某特性](#%E9%80%9A%E8%BF%87%E7%BC%96%E8%AF%91%E4%BB%A3%E7%A0%81%E7%89%87%E6%AE%B5%E6%A3%80%E6%9F%A5%E6%98%AF%E5%90%A6%E6%94%AF%E6%8C%81%E6%9F%90%E7%89%B9%E6%80%A7)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -123,3 +125,111 @@ function(copy_sources_to_target_file_dir target sources)
 endfunction()
 ```
 - 这里不能使用`${CMAKE_CURRENT_BINARY_DIR}`，因为在不同的构建工具中这个目录可能不一样，比如VS的生成目录就有一层`Debug/Release`。为了屏蔽不同构建工具的差异，要么编写逻辑处理，要么使用生成器表达式`$<TARGET_FILE_DIR:xxx>`。
+
+## 检查编译器是否支持某特性
+
+- 可以通过检查`CMAKE_CXX_COMPILE_FEATURES`变量来检查是否支持某个特性。
+- 具体的特性包括但不限于：见[这里](https://cmake.org/cmake/help/latest/prop_gbl/CMAKE_CXX_KNOWN_FEATURES.html#prop_gbl:CMAKE_CXX_KNOWN_FEATURES)。
+```
+cxx_std_98
+cxx_template_template_parameters
+cxx_std_11
+cxx_alias_templates
+cxx_alignas
+cxx_alignof
+cxx_attributes
+cxx_auto_type
+cxx_constexpr
+cxx_decltype
+cxx_decltype_incomplete_return_types
+cxx_default_function_template_args
+cxx_defaulted_functions
+cxx_defaulted_move_initializers
+cxx_delegating_constructors
+cxx_deleted_functions
+cxx_enum_forward_declarations
+cxx_explicit_conversions
+cxx_extended_friend_declarations
+cxx_extern_templates
+cxx_final
+cxx_func_identifier
+cxx_generalized_initializers
+cxx_inheriting_constructors
+cxx_inline_namespaces
+cxx_lambdas
+cxx_local_type_template_args
+cxx_long_long_type
+cxx_noexcept
+cxx_nonstatic_member_init
+cxx_nullptr
+cxx_override
+cxx_range_for
+cxx_raw_string_literals
+cxx_reference_qualified_functions
+cxx_right_angle_brackets
+cxx_rvalue_references
+cxx_sizeof_member
+cxx_static_assert
+cxx_strong_enums
+cxx_thread_local
+cxx_trailing_return_types
+cxx_unicode_literals
+cxx_uniform_initialization
+cxx_unrestricted_unions
+cxx_user_literals
+cxx_variadic_macros
+cxx_variadic_templates
+cxx_std_14
+cxx_aggregate_default_initializers
+cxx_attribute_deprecated
+cxx_binary_literals
+cxx_contextual_conversions
+cxx_decltype_auto
+cxx_digit_separators
+cxx_generic_lambdas
+cxx_lambda_init_captures
+cxx_relaxed_constexpr
+cxx_return_type_deduction
+cxx_variable_templates
+cxx_std_17
+cxx_std_20
+cxx_std_23
+```
+- 可以检查某一项是否在该列表中来检查是否支持该特性：
+```CMake
+list(FIND CMAKE_CXX_COMPILE_FEATURES cxx_std_20 cxx20_supported)
+if (cxx20_supported EQUAL -1)
+    message("C++ 20 is not supported!")
+endif()
+```
+
+## 通过编译代码片段检查是否支持某特性
+
+- 某些特性并不在上面的`CMAKE_CXX_COMPILE_FEATURES`的列表中，比如库特性。
+- 但是我们可以通过编译一个代码片段来检查某个特性是否得到支持。
+- 比如检查`<format>`在当前工具链中是否支持，如果支持就使用标准库版本，如果不支持，那么就将一个包含了手动添加的`format`头文件的目录添加到包含目录中。
+```C++
+// 3rdparty-install/formatbridge/format
+#pragma once
+#define FMT_HEADER_ONLY
+#include <fmt/format.h>
+namespace std
+{
+    using fmt::format;
+    using fmt::format_error;
+    using fmt::formatter;
+}
+```
+- 在`CMakeLists.txt`中则通过`check_cxx_source_compiles`函数来检测：
+```CMake
+include(CheckCXXSourceCompiles)
+
+add_library(format_bridge INTERFACE)
+check_cxx_source_compiles("#include <format>\nint main() { return 0; }" format_supported)
+if (NOT format_supported)
+    target_include_directories(format_bridge INTERFACE ${CMAKE_SOURCE_DIR}/3rdparty-install/include/formatbridge)
+    message("## <format> is not support on your compiler yet, use fmt library instead!")
+endif()
+```
+- 然后将`format_bridge`库通过`target_link_libraries`链接到要使用的目标中即可。
+- 如果支持了`<format>`，比如MSVC 2022，那么就不会使用第三方的fmt库。如果不支持比如GCC 12.2.0，那么就会转而使用第三方库，非常方便，不需要对源码有任何更改。
