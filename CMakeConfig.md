@@ -8,6 +8,7 @@
   - [文件拷贝](#%E6%96%87%E4%BB%B6%E6%8B%B7%E8%B4%9D)
   - [检查编译器是否支持某特性](#%E6%A3%80%E6%9F%A5%E7%BC%96%E8%AF%91%E5%99%A8%E6%98%AF%E5%90%A6%E6%94%AF%E6%8C%81%E6%9F%90%E7%89%B9%E6%80%A7)
   - [通过编译代码片段检查是否支持某特性](#%E9%80%9A%E8%BF%87%E7%BC%96%E8%AF%91%E4%BB%A3%E7%A0%81%E7%89%87%E6%AE%B5%E6%A3%80%E6%9F%A5%E6%98%AF%E5%90%A6%E6%94%AF%E6%8C%81%E6%9F%90%E7%89%B9%E6%80%A7)
+  - [跨编译器配置](#%E8%B7%A8%E7%BC%96%E8%AF%91%E5%99%A8%E9%85%8D%E7%BD%AE)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -233,3 +234,80 @@ endif()
 ```
 - 然后将`format_bridge`库通过`target_link_libraries`链接到要使用的目标中即可。
 - 如果支持了`<format>`，比如MSVC 2022，那么就不会使用第三方的fmt库。如果不支持比如GCC 12.2.0，那么就会转而使用第三方库，非常方便，不需要对源码有任何更改。
+
+## 跨编译器配置
+
+- 配置编译选项基本上前面 编译选项定制 里面的生成器表达式就够用了。
+- 但是某些时候还需要能够保存到一个变量中，某些编译器（典型的是`clang-cl`）无法通过上面的生成器表达式得到，还可以通过变量`CMAKE_CXX_COMPILER_ID`来获取。更多细节见[这里](https://cmake.org/cmake/help/latest/variable/CMAKE_LANG_COMPILER_ID.html#variable:CMAKE_%3CLANG%3E_COMPILER_ID)。
+
+```CMake
+# different compilers options
+set(CXX_COMPILER_IS_GCC OFF)            # gcc
+set(CXX_COMPILER_IS_CLANG OFF)          # clang
+set(CXX_COMPILER_IS_MSVC OFF)           # msvc
+set(CXX_COMPILER_IS_CLANG_CL OFF)       # clang-cl
+set(CXX_COMPILER_IS_GNU_LIKE OFF)       # gcc, clang, clang-cl
+set(CXX_COMPILER_IS_GCC_CLANG OFF)      # gcc, clang
+set(CXX_COMPILER_IS_CLANG_ALL OFF)      # clang, clang-cl
+set(CXX_COMPILER_IS_MSVC_LIKE OFF)      # msvc, clang-cl
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    set(CXX_COMPILER_IS_GCC ON)
+    set(CXX_COMPILER_IS_GNU_LIKE ON)
+    set(CXX_COMPILER_IS_GCC_CLANG ON)
+    message("## Compiler: gcc")
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if (CMAKE_CXX_SIMULATE_ID MATCHES "MSVC" AND CMAKE_CL_64)
+        set(CXX_COMPILER_IS_CLANG_CL ON)
+        set(CXX_COMPILER_IS_GNU_LIKE ON)
+        set(CXX_COMPILER_IS_CLANG_ALL ON)
+        set(CXX_COMPILER_IS_MSVC_LIKE ON)
+        message("## Compiler: clang-cl")
+    else ()
+        set(CXX_COMPILER_IS_CLANG ON)
+        set(CXX_COMPILER_IS_GNU_LIKE ON)
+        set(CXX_COMPILER_IS_GCC_CLANG ON)
+        set(CXX_COMPILER_IS_CLANG_ALL ON)
+        message("## Compiler: clang")
+    endif ()
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    set(CXX_COMPILER_IS_MSVC ON)
+    set(CXX_COMPILER_IS_MSVC_LIKE ON)
+    message("## Compiler: msvc")
+else ()
+    message(FATAL_ERROR "Unsupported Compiler!")
+endif ()
+
+
+# general C++ compiler options
+add_library(general_cxx_compiler_options INTERFACE)
+target_compile_options(general_cxx_compiler_options INTERFACE
+    # gcc/clang/clang-cl common options
+    $<$<BOOL:${CXX_COMPILER_IS_GNU_LIKE}>:$<BUILD_INTERFACE:
+        -Wall
+        -Wextra
+        -Wshadow
+        -Wformat=2
+        -Wno-unused-parameter
+        -Wno-unused-variable
+    >>
+    # gcc/clang common options
+    $<$<BOOL:${CXX_COMPILER_IS_GCC_CLANG}>:$<BUILD_INTERFACE:
+        -pedantic-errors
+    >>
+    # MSVC/clang-cl common options
+    $<$<BOOL:${CXX_COMPILER_IS_MSVC_LIKE}>:$<BUILD_INTERFACE:
+        /W3
+    >>
+)
+```
+- 编译器原则上来所和操作系统是正交的，某些配置还会取决于操作系统。通常我们只关心`Windows/Unix/Apple`三个操作系统：
+```CMake
+if (APPLE)
+    message(STATUS "MacOs")
+elseif (UNIX) # Linux
+    message(STATUS "Linux")
+elseif (WIN32)
+    message(STATUS "Windows")
+endif()
+```
+- 其他的环境相关变量还有：`MINGW CYGWIN MSVC LINUX MSYS BSE`等，见[描述环境的CMake变量](https://cmake.org/cmake/help/latest/manual/cmake-variables.7.html#variables-that-describe-the-system)。
