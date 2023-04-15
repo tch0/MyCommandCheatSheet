@@ -9,6 +9,7 @@
   - [检查编译器是否支持某特性](#%E6%A3%80%E6%9F%A5%E7%BC%96%E8%AF%91%E5%99%A8%E6%98%AF%E5%90%A6%E6%94%AF%E6%8C%81%E6%9F%90%E7%89%B9%E6%80%A7)
   - [通过编译代码片段检查是否支持某特性](#%E9%80%9A%E8%BF%87%E7%BC%96%E8%AF%91%E4%BB%A3%E7%A0%81%E7%89%87%E6%AE%B5%E6%A3%80%E6%9F%A5%E6%98%AF%E5%90%A6%E6%94%AF%E6%8C%81%E6%9F%90%E7%89%B9%E6%80%A7)
   - [跨编译器配置](#%E8%B7%A8%E7%BC%96%E8%AF%91%E5%99%A8%E9%85%8D%E7%BD%AE)
+  - [为IDE（如VS）配置筛选器](#%E4%B8%BAide%E5%A6%82vs%E9%85%8D%E7%BD%AE%E7%AD%9B%E9%80%89%E5%99%A8)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -311,3 +312,27 @@ elseif (WIN32)
 endif()
 ```
 - 其他的环境相关变量还有：`MINGW CYGWIN MSVC LINUX MSYS BSE`等，见[描述环境的CMake变量](https://cmake.org/cmake/help/latest/manual/cmake-variables.7.html#variables-that-describe-the-system)。
+
+
+## 为IDE（如VS）配置筛选器
+
+使用`source_group`命令将源文件分组即可做到：
+
+- 如果头文件和源文件分开放在不同目录，并且已经按照一定规则组织好了目录，最简单的方式就是筛选器完全按照文件目录来配置：
+```CMake
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} [PREFIX "Some Prefix"] FILES ${lib_sources} ${lib_headers})
+```
+- 如果头文件源文件混在一起，并且按照一定规则组织，那么可以按照目录结构组织筛选器，并区分一下源文件和头文件：
+```CMake
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Header Files" FILES ${lib_headers})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} PREFIX "Source Files" FILES ${lib_sources})
+```
+- 如果所有东西全部混在一起，且需要精细的重新组织，那么需要全部手动组织：
+```CMake
+source_group("Source Files/sys" FILES ${sys_sources})
+source_group("Source Files/gl" FILES ${gl_sources})
+...
+source_group("Header Files/sys" FILES ${sys_headers})
+source_group("Header Files/gl" FILES ${gl_headers})
+...
+```
