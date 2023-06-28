@@ -93,3 +93,10 @@ Host ssh.github.com
   TCPKeepAlive yes
 ```
 - 其中https和socks5代理端口需要去代理软件中查看。
+
+- **为WSL2配置使用本机代理**：执行`cat /etc/resolv.conf`查看本机IP，替换上面步骤中的IP即可。
+
+- **为虚拟机中的Ubuntu配置使用本机代理**：
+  - 本机执行`ipconfig`找到本机的局域网IP，虚拟机网络连接模式选择桥接。
+  - 按照上面的步骤配置即可，IP替换为上面的本机IP。
+  - 虚拟机中更好的方式是配置为全局的，这样浏览器以及其他命令也能用，也就不需要单独为git配置了：设置-网络-网路代理-手动然后配置socks主机即可。效果其实就是将`all_proxy=socks://ip:port/`添加到了环境中（IP和端口是上面的）。
