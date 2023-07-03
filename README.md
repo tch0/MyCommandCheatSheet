@@ -1,6 +1,7 @@
 # 命令速查表
 
 - [Linux命令速查](Linux.md)
+- [Linux发行版配置](LinuxDistroConfig.md)
 - [git命令速查](Git.md)
 - [CMake命令速查](CMake.md)
 - [CMake配置速查](CMakeConfig.md)
