@@ -64,3 +64,10 @@ yum makecache
 ```
 sudo yum update -y
 ```
+
+## WSL
+
+WSL中查看宿主机IP：
+```
+cat /etc/resolv.conf
+```
